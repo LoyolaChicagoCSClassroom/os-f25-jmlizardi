@@ -1,9 +1,8 @@
-
 UNAME_M := $(shell uname -m)
 
 ifeq ($(UNAME_M),aarch64)
 PREFIX:=i686-linux-gnu-
-BOOTIMG:=/usr/local/grub/lib/grub/i386-pc/boot.img
+BOOTIMG:=/usr/lib/grub/i386-pc/boot.img
 GRUBLOC:=/usr/local/grub/bin/
 else
 PREFIX:=
@@ -22,8 +21,10 @@ CFLAGS := -ffreestanding -mgeneral-regs-only -mno-mmx -m32 -march=i386 -fno-pie 
 ODIR = obj
 SDIR = src
 
-OBJS = \
-	kernel_main.o \
+OBJS := \
+	rprintf.o \
+	terminal.o \
+	kernel_main.o
 
 # Make sure to keep a blank line here after OBJS list
 
@@ -48,21 +49,23 @@ obj:
 rootfs.img:
 	dd if=/dev/zero of=rootfs.img bs=1M count=32
 	$(GRUBLOC)grub-mkimage -p "(hd0,msdos1)/boot" -o grub.img -O i386-pc normal biosdisk multiboot multiboot2 configfile fat exfat part_msdos
-	dd if=/usr/local/grub/lib/grub/i386-pc/boot.img  of=rootfs.img conv=notrunc
 	dd if=$(BOOTIMG) of=rootfs.img conv=notrunc
+	dd if=grub.img of=rootfs.img conv=notrunc seek=1
 	echo 'start=2048, type=83, bootable' | sfdisk rootfs.img
 	mkfs.vfat --offset 2048 -F16 rootfs.img
 	mcopy -i rootfs.img@@1M kernel ::/
-	mmd -i rootfs.img@@1M boot 
+	mmd -i rootfs.img@@1M boot
 	mcopy -i rootfs.img@@1M grub.cfg ::/boot
-	@echo " -- BUILD COMPLETED SUCCESSFULLY --"
-
-
-run:
-	qemu-system-i386 -hda rootfs.img
 
 debug:
 	./launch_qemu.sh
 
 clean:
 	rm -f grub.img kernel rootfs.img obj/*
+.PHONY: run
+run: all
+	@if command -v qemu-system-i386 >/dev/null 2>&1; then \
+		qemu-system-i386 -m 256 -drive file=$(PWD)/rootfs.img,format=raw,if=ide -boot c -display curses; \
+	else \
+		qemu-system-x86_64 -cpu qemu32 -m 256 -drive file=$(PWD)/rootfs.img,format=raw,if=ide -boot c -display curses; \
+	fi
