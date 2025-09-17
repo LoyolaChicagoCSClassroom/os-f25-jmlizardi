@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "terminal.h"
 #include "rprintf.h"
+#include "interrupt.h"
+#include "io.h"
 
 #define MULTIBOOT2_HEADER_MAGIC         0xe85250d6
 
@@ -25,6 +27,10 @@ uint8_t inb (uint16_t _port) { //already included with kernel
 
     vram[1].ascii = 'b'; //baremetal way of printing to second cell
     vram[1].color = 7; //color
+    // Remap PIC and enable keyboard IRQ
+    remap_pic();
+    IRQ_clear_mask(1); // Unmask keyboard IRQ
+    init_idt(); // Initialize IDT (if not already done)
 // Conducts CPL check to later be called when printing execution level
  int get_cpl(void) {
     unsigned short cs;
@@ -54,9 +60,9 @@ uint8_t inb (uint16_t _port) { //already included with kernel
      print_execution_level(); // After the print executes, showing it works & scrolls print CPL 
 
 
-    while(1) {
-        uint8_t status = inb(0x64);
-            uint8_t scancode = inb(0x60);
+    // Main loop can be empty or used for other tasks; keyboard input is now interrupt-driven
+    while (1) {
+        // Idle loop
     }
 
  }
