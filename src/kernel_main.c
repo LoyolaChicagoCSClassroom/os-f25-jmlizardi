@@ -12,11 +12,11 @@ const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
  { 0xE85250D6, 0, 24, (unsigned)(0 - (0xE85250D6u + 0u + 24u)), 0, 8 };
  //had to modify this from original kernel_main.c... OS was permantly rebooting
 
-uint8_t inb (uint16_t _port) { //already included with kernel
+/*uint8_t inb (uint16_t _port) { //already included with kernel
     uint8_t rv;
     __asm__ __volatile__ ("inb %1, %0" : "=a" (rv) : "dN" (_port));
     return rv;
-}
+}*/
 
  void main() {
     struct video_buf *vram = (struct video_buf*)0xb8000; // Base address of video mem
