@@ -55,9 +55,9 @@ const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
      }
      print_execution_level(); // After the print executes, showing it works & scrolls print CPL 
 // Remap PIC and enable keyboard IRQ
-    remap_pic();
-    IRQ_clear_mask(1); // Unmask keyboard IRQ
-    init_idt(); // Initialize IDT (if not already done)
+    //remap_pic();
+    //IRQ_clear_mask(1); // Unmask keyboard IRQ
+    //init_idt(); // Initialize IDT (if not already done)
 
     // Main loop can be empty or used for other tasks; keyboard input is now interrupt-driven
     while (1) {
