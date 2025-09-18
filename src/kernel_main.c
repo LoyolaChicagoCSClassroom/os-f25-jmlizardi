@@ -57,7 +57,7 @@ const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
 // Remap PIC and enable keyboard IRQ
     //remap_pic();
     //IRQ_clear_mask(1); // Unmask keyboard IRQ
-    //init_idt(); // Initialize IDT (if not already done)
+    init_idt(); // Initialize IDT (if not already done)
 
     // Main loop can be empty or used for other tasks; keyboard input is now interrupt-driven
     while (1) {
