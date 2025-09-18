@@ -353,9 +353,11 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    outb(0x20,0x20);
+    uint8_t scancode = inb(0x60);
+    extern int putc(int);
+    extern int esp_printf(void*, const char*, ...);
+    esp_printf((void*)putc, "Scancode: 0x%02x\n", scancode);
+    outb(0x20, 0x20); // Send EOI
 }
 
 
