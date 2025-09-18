@@ -11,12 +11,12 @@ static inline void outb(uint16_t port, uint8_t val) {
 }
 
 // Read a byte from the specified port
-/*static inline uint8_t inb(uint16_t port) {
+static inline uint8_t inb(uint16_t port) {
 	uint8_t ret;
 	__asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
 	return ret;
 }
-*/
+
 // Read a word (2 bytes) from the specified port
 static inline uint16_t inw(uint16_t port) {
 	uint16_t ret;

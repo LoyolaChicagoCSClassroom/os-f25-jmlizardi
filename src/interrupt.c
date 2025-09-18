@@ -9,9 +9,9 @@ struct idt_ptr   idt_ptr;
 struct tss_entry tss_ent;
 
 
-void memset(char *s, char c, unsigned int n) {
+void memset(void *s, char c, unsigned int n) {
     for(int k = 0; k < n ; k++) {
-        s[k] = c;
+        ((char *)s)[k] = c;
     }
 }
 
@@ -353,16 +353,9 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
-    // Read scancode from keyboard data port (0x60)
-    uint8_t scancode = inb(0x60);
-
-    // Print scancode as hex to terminal (using esp_printf if available)
-    extern int putc(int);
-    extern int esp_printf(void*, const char*, ...);
-    esp_printf((void*)putc, "Scancode: 0x%02x\n", scancode);
-
-    // Send EOI to PIC
-    outb(0x20, 0x20);
+    asm("cli");
+    /* do something */
+    outb(0x20,0x20);
 }
 
 
