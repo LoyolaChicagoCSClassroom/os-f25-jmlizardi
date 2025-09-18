@@ -27,10 +27,6 @@ const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
 
     vram[1].ascii = 'b'; //baremetal way of printing to second cell
     vram[1].color = 7; //color
-    // Remap PIC and enable keyboard IRQ
-    remap_pic();
-    IRQ_clear_mask(1); // Unmask keyboard IRQ
-    init_idt(); // Initialize IDT (if not already done)
 // Conducts CPL check to later be called when printing execution level
  int get_cpl(void) {
     unsigned short cs;
@@ -58,7 +54,10 @@ const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
      esp_printf((func_ptr)putc, "Line %d: Justin Was Here!\n", line_number++);
      }
      print_execution_level(); // After the print executes, showing it works & scrolls print CPL 
-
+// Remap PIC and enable keyboard IRQ
+    remap_pic();
+    IRQ_clear_mask(1); // Unmask keyboard IRQ
+    init_idt(); // Initialize IDT (if not already done)
 
     // Main loop can be empty or used for other tasks; keyboard input is now interrupt-driven
     while (1) {
