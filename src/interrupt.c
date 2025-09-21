@@ -227,9 +227,8 @@ void idt_flush(struct idt_ptr *idt){
 
 __attribute__((interrupt)) void divide_error_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Divide by zero error - just return for now
+    // In a real OS, this would terminate the process
 }
 
 __attribute__((interrupt)) void debug_exception_handler(struct interrupt_frame* frame)
@@ -317,23 +316,21 @@ __attribute__((interrupt)) void stack_exception_handler(struct interrupt_frame* 
 //__attribute__((interrupt)) void general_protection_handler(struct interrupt_frame* frame)
 void general_protection_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // General protection fault - just return for now
+    // In a real OS, this would terminate the process
 }
 //void page_fault_handler(struct interrupt_frame* frame)
 void page_fault_handler(struct process_context_with_error* ctx)
 {
-    asm("cli");
-    while(1);
+    // Page fault - just return for now
+    // In a real OS, this would handle virtual memory
 }
 
 
 __attribute__((interrupt)) void coprocessor_error_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Coprocessor error - just return for now
+    // In a real OS, this would handle the FPU error
 }
 
 __attribute__((interrupt)) void stub_isr(struct interrupt_frame* frame)
@@ -343,15 +340,22 @@ __attribute__((interrupt)) void stub_isr(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Timer interrupt - send EOI and return
+    outb(0x20, 0x20); // Send EOI to PIC
 }
 
 
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
-    outb(0x20, 0x20); // Send EOI
+    // Read the scancode from the keyboard data port (0x60)
+    unsigned char scancode = inb(0x60);
+    
+    // Print the scancode to the terminal
+    // Using esp_printf to display the hex value
+    esp_printf("Scancode: 0x%02x\n", scancode);
+    
+    // Send EOI to PIC to acknowledge the interrupt
+    outb(0x20, 0x20);
 }
 
 
