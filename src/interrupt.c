@@ -363,9 +363,8 @@ __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void syscall_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // System call handler - just return for now
+    // In a real OS, this would handle system calls
 }
 
 static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
@@ -383,6 +382,8 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
 void init_idt() {
     int i;
 
+    // First remap the PIC to avoid conflicts with CPU exceptions
+    remap_pic();
 
     extern struct gdt_entry_bits gdt[];
     write_tss(&gdt[5]);
@@ -417,6 +418,9 @@ void init_idt() {
     idt_set_gate(0x80, (uint32_t)syscall_handler,0x08, 0xee); // Set flags to EE, making DPL = 3 so it is accessible from userspace
     idt_set_gate(32,   (uint32_t)pit_handler, 0x08, 0x8e);
     idt_flush(&idt_ptr);
+    
+    // Enable interrupts after IDT is set up
+    asm volatile("sti");
 }
 
 void remap_pic(void)
