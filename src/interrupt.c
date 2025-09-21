@@ -393,11 +393,16 @@ void init_idt() {
         idt_set_gate( i, (uint32_t)stub_isr, 0x08, 0x8E);
     }
     
+    // Add the keyboard handler
+    idt_set_gate(0x21, (uint32_t)keyboard_handler, 0x08, 0x8e);
+    
     // Load the IDT
     idt_flush(&idt_ptr);
     
-    // Now try adding PIC remapping (but still no interrupt enabling)
+    // Remap PIC
     remap_pic();
+    
+    // Still don't enable interrupts yet
 }
 
 void remap_pic(void)
