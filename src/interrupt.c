@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include "interrupt.h"
 #include "io.h"
+#include "rprintf.h"
+#include "terminal.h"
 
 
 struct idt_entry idt_entries[256];
@@ -351,8 +353,8 @@ __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
     unsigned char scancode = inb(0x60);
     
     // Print the scancode to the terminal
-    // Using esp_printf to display the hex value
-    esp_printf("Scancode: 0x%02x\n", scancode);
+    // Using esp_printf with putc function pointer to display the hex value
+    esp_printf((func_ptr)putc, "Scancode: 0x%02x\n", scancode);
     
     // Send EOI to PIC to acknowledge the interrupt
     outb(0x20, 0x20);
