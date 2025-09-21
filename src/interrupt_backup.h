@@ -1,3 +1,5 @@
+
+
 #ifndef __INTERRUPT_H__
 #define __INTERRUPT_H__
 
@@ -152,4 +154,5 @@ void IRQ_set_mask(unsigned char IRQline);
 void init_idt();
 void tss_flush (uint16_t tss);
 void load_gdt();
+void remap_pic(void);
 #endif

@@ -1,16 +1,19 @@
+
 #include <stdint.h>
 #include "interrupt.h"
 #include "io.h"
+//#include "rprintf.h"
 #include "terminal.h"
+
 
 struct idt_entry idt_entries[256];
 struct idt_ptr   idt_ptr;
 struct tss_entry tss_ent;
 
 
-void memset(char *s, char c, unsigned int n) {
+void memset(void *s, char c, unsigned int n) {
     for(int k = 0; k < n ; k++) {
-        s[k] = c;
+        ((char *)s)[k] = c;
     }
 }
 
@@ -226,9 +229,8 @@ void idt_flush(struct idt_ptr *idt){
 
 __attribute__((interrupt)) void divide_error_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Divide by zero error - just return for now
+    // In a real OS, this would terminate the process
 }
 
 __attribute__((interrupt)) void debug_exception_handler(struct interrupt_frame* frame)
@@ -316,53 +318,55 @@ __attribute__((interrupt)) void stack_exception_handler(struct interrupt_frame* 
 //__attribute__((interrupt)) void general_protection_handler(struct interrupt_frame* frame)
 void general_protection_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // General protection fault - just return for now
+    // In a real OS, this would terminate the process
 }
 //void page_fault_handler(struct interrupt_frame* frame)
 void page_fault_handler(struct process_context_with_error* ctx)
 {
-    asm("cli");
-    while(1);
+    // Page fault - just return for now
+    // In a real OS, this would handle virtual memory
 }
 
 
 __attribute__((interrupt)) void coprocessor_error_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Coprocessor error - just return for now
+    // In a real OS, this would handle the FPU error
 }
 
 __attribute__((interrupt)) void stub_isr(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Read keyboard port to clear any pending keyboard data
+    // This prevents keyboard interrupts from hanging
+    inb(0x60);
+    
+    // Send EOI to PIC
+    outb(0x20, 0x20);
 }
 
 __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // Timer interrupt - send EOI and return
+    outb(0x20, 0x20); // Send EOI to PIC
 }
 
 
-__attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
+// Simple, safe keyboard handler
+__attribute__((interrupt)) void safe_keyboard_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    outb(0x20,0x20);
+    // Read scancode to clear keyboard buffer
+    inb(0x60);
+    
+    // Send EOI
+    outb(0x20, 0x20);
 }
 
 
 __attribute__((interrupt)) void syscall_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    // System call handler - just return for now
+    // In a real OS, this would handle system calls
 }
 
 static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
@@ -380,40 +384,34 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
 void init_idt() {
     int i;
 
-
-    extern struct gdt_entry_bits gdt[];
-    write_tss(&gdt[5]);
-
+    // Set up the IDT structure
     idt_ptr.limit = sizeof(struct idt_entry) * 256 -1;
     idt_ptr.base  = (uint32_t)&idt_entries;
 
     memset(&idt_entries, 0, sizeof(struct idt_entry)*256);
 
+    // Set all interrupts to use stub_isr (including keyboard for now)
     for(i = 0; i < 256; i++){
         idt_set_gate( i, (uint32_t)stub_isr, 0x08, 0x8E);
     }
-    idt_set_gate(0, (uint32_t)divide_error_handler, 0x08, 0x8e);
-    idt_set_gate(1, (uint32_t)debug_exception_handler, 0x08, 0x8e);
-    idt_set_gate(2, (uint32_t)breakpoint_exception_handler, 0x08, 0x8e);
-    idt_set_gate(3, (uint32_t)overflow_handler, 0x08, 0x8e);
-    idt_set_gate(4, (uint32_t)overflow_handler, 0x08, 0x8e);
-    idt_set_gate(5, (uint32_t)bound_check_handler, 0x08, 0x8e);
-    idt_set_gate(6, (uint32_t)invalid_opcode_handler, 0x08, 0x8e);
-    idt_set_gate(7, (uint32_t)coprocessor_not_available_handler, 0x08, 0x8e);
-    idt_set_gate(8, (uint32_t)double_fault_handler, 0x08, 0x8e);
-//    idt_set_gate(9, (uint32_t)coprocessor_segment_overrun_handler, 0x08, 0x8e);
-    idt_set_gate(10, (uint32_t)invalid_tss_handler, 0x08, 0x8e);
-    idt_set_gate(11, (uint32_t)segment_not_present_handler, 0x08, 0x8e);
-    idt_set_gate(12, (uint32_t)stack_exception_handler, 0x08, 0x8e);
-
-    idt_set_gate(13, (uint32_t)general_protection_handler, 0x08, 0x8e);
-    idt_set_gate(14, (uint32_t)page_fault_handler, 0x08, 0x8e);
-//    idt_set_gate(15, (uint32_t)coprocessor_error_handler, 0x08, 0x8e);
-
-    idt_set_gate(0x21, (uint32_t)keyboard_handler,0x08, 0x8e);
-    idt_set_gate(0x80, (uint32_t)syscall_handler,0x08, 0xee); // Set flags to EE, making DPL = 3 so it is accessible from userspace
-    idt_set_gate(32,   (uint32_t)pit_handler, 0x08, 0x8e);
+    
+    // Don't use custom keyboard handler - let stub_isr handle everything
+    // idt_set_gate(0x21, (uint32_t)safe_keyboard_handler, 0x08, 0x8e);
+    
+    // Load the IDT
     idt_flush(&idt_ptr);
+    
+    // Remap PIC (but keep all interrupts masked)
+    remap_pic();
+    
+    // Enable interrupts - but no hardware interrupts should fire since they're all masked
+    asm volatile("sti");
+    
+    // Now carefully unmask only the keyboard interrupt (IRQ1)
+    // Read current mask, clear bit 1 (keyboard), write back
+    unsigned char mask = inb(0x21);
+    mask &= ~0x02; // Clear bit 1 (keyboard IRQ)
+    outb(0x21, mask);
 }
 
 void remap_pic(void)
@@ -437,9 +435,12 @@ void remap_pic(void)
     /* ICW4 - environment info */
     outb(PIC_1_DATA, 0x01);
     outb(PIC_2_DATA, 0x01);
-    /* mask interrupts */
+    /* mask ALL interrupts initially */
     outb(0x21 , 0xff);
     outb(0xA1 , 0xff);
-    /* Initialization finished */
-    outb(0x21, 0xfd); // Enable keyboard interrupts
+    /* Don't enable keyboard interrupts automatically */
+    // outb(0x21, 0xfd); // Enable keyboard interrupts
 }
+
+
+
