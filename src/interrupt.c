@@ -349,13 +349,10 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
-    // Read the scancode from the keyboard data port (0x60)
+    // Read the scancode to clear the keyboard buffer
     unsigned char scancode = inb(0x60);
     
-    // Simple output - just put a character directly to VGA
-    // This avoids complex printf operations in interrupt context
-    putc('K'); // Just show that keyboard interrupt fired
-    
+    // Don't do ANY output - just acknowledge the interrupt
     // Send EOI to PIC to acknowledge the interrupt
     outb(0x20, 0x20);
 }
