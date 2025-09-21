@@ -408,7 +408,6 @@ void init_idt() {
     mask &= ~0x02; // Clear bit 1 (keyboard IRQ)
     outb(0x21, mask);
 }
-}
 
 void remap_pic(void)
 {
