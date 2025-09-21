@@ -380,7 +380,7 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
 void init_idt() {
     int i;
 
-    // Minimal setup - just set up the IDT structure without enabling interrupts
+    // Set up the IDT structure
     idt_ptr.limit = sizeof(struct idt_entry) * 256 -1;
     idt_ptr.base  = (uint32_t)&idt_entries;
 
@@ -401,8 +401,8 @@ void init_idt() {
     // Remap PIC
     remap_pic();
     
-    // Enable interrupts - may or may not work...
-    asm volatile("sti");
+    // DON'T enable interrupts - keep them disabled to test
+    // asm volatile("sti");
 }
 
 void remap_pic(void)
