@@ -339,7 +339,7 @@ __attribute__((interrupt)) void stub_isr(struct interrupt_frame* frame)
 {
     asm("cli");
     /* do something */
-    while(1);
+    outb(0x20,0x20);
 }
 
 __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
@@ -380,7 +380,6 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
 void init_idt() {
     int i;
 
-
     extern struct gdt_entry_bits gdt[];
     write_tss(&gdt[5]);
 
@@ -389,30 +388,14 @@ void init_idt() {
 
     memset((char*)&idt_entries, 0, sizeof(struct idt_entry)*256);
 
+    // Set all interrupts to use stub_isr for now
     for(i = 0; i < 256; i++){
         idt_set_gate( i, (uint32_t)stub_isr, 0x08, 0x8E);
     }
-    idt_set_gate(0, (uint32_t)divide_error_handler, 0x08, 0x8e);
-    idt_set_gate(1, (uint32_t)debug_exception_handler, 0x08, 0x8e);
-    idt_set_gate(2, (uint32_t)breakpoint_exception_handler, 0x08, 0x8e);
-    idt_set_gate(3, (uint32_t)overflow_handler, 0x08, 0x8e);
-    idt_set_gate(4, (uint32_t)overflow_handler, 0x08, 0x8e);
-    idt_set_gate(5, (uint32_t)bound_check_handler, 0x08, 0x8e);
-    idt_set_gate(6, (uint32_t)invalid_opcode_handler, 0x08, 0x8e);
-    idt_set_gate(7, (uint32_t)coprocessor_not_available_handler, 0x08, 0x8e);
-    idt_set_gate(8, (uint32_t)double_fault_handler, 0x08, 0x8e);
-//    idt_set_gate(9, (uint32_t)coprocessor_segment_overrun_handler, 0x08, 0x8e);
-    idt_set_gate(10, (uint32_t)invalid_tss_handler, 0x08, 0x8e);
-    idt_set_gate(11, (uint32_t)segment_not_present_handler, 0x08, 0x8e);
-    idt_set_gate(12, (uint32_t)stack_exception_handler, 0x08, 0x8e);
-
-    idt_set_gate(13, (uint32_t)general_protection_handler, 0x08, 0x8e);
-    idt_set_gate(14, (uint32_t)page_fault_handler, 0x08, 0x8e);
-//    idt_set_gate(15, (uint32_t)coprocessor_error_handler, 0x08, 0x8e);
-
+    
+    // Only set up the keyboard handler
     idt_set_gate(0x21, (uint32_t)keyboard_handler,0x08, 0x8e);
-    idt_set_gate(0x80, (uint32_t)syscall_handler,0x08, 0xee); // Set flags to EE, making DPL = 3 so it is accessible from userspace
-    idt_set_gate(32,   (uint32_t)pit_handler, 0x08, 0x8e);
+    
     idt_flush(&idt_ptr);
 }
 
