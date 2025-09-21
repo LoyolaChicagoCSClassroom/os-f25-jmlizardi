@@ -398,11 +398,11 @@ void init_idt() {
     // Load the IDT
     idt_flush(&idt_ptr);
     
-    // Remap PIC
+    // Remap PIC (but keep all interrupts masked)
     remap_pic();
     
-    // DON'T enable interrupts - keep them disabled to test
-    // asm volatile("sti");
+    // Enable interrupts - but no hardware interrupts should fire since they're all masked
+    asm volatile("sti");
 }
 
 void remap_pic(void)
@@ -426,11 +426,11 @@ void remap_pic(void)
     /* ICW4 - environment info */
     outb(PIC_1_DATA, 0x01);
     outb(PIC_2_DATA, 0x01);
-    /* mask interrupts */
+    /* mask ALL interrupts initially */
     outb(0x21 , 0xff);
     outb(0xA1 , 0xff);
-    /* Initialization finished */
-    outb(0x21, 0xfd); // Enable keyboard interrupts
+    /* Don't enable keyboard interrupts automatically */
+    // outb(0x21, 0xfd); // Enable keyboard interrupts
 }
 
 
