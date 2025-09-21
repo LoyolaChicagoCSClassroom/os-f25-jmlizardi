@@ -338,9 +338,7 @@ __attribute__((interrupt)) void coprocessor_error_handler(struct interrupt_frame
 
 __attribute__((interrupt)) void stub_isr(struct interrupt_frame* frame)
 {
-    asm("cli");
-    /* do something */
-    while(1);
+    outb(0x20, 0x20); // Send EOI to PIC
 }
 
 __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
