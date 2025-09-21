@@ -393,10 +393,11 @@ void init_idt() {
         idt_set_gate( i, (uint32_t)stub_isr, 0x08, 0x8E);
     }
     
-    // Load the IDT but don't enable interrupts yet
+    // Load the IDT
     idt_flush(&idt_ptr);
     
-    // Don't remap PIC or enable interrupts for now - just test IDT loading
+    // Now try adding PIC remapping (but still no interrupt enabling)
+    remap_pic();
 }
 
 void remap_pic(void)
