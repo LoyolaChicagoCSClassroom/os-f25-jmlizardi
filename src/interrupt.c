@@ -163,7 +163,7 @@ void write_tss(struct gdt_entry_bits *g) {
     g->base_high = (base & 0xFF000000)>>24; //isolate top byte.
 
     // Ensure the TSS is initially zero'd.
-    memset(&tss_ent, 0, sizeof(tss_ent));
+    memset((char*)&tss_ent, 0, sizeof(tss_ent));
 
     extern int _end_stack;
 
