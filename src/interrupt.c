@@ -402,7 +402,8 @@ void init_idt() {
     // Remap PIC
     remap_pic();
     
-    // Still don't enable interrupts yet
+    // Enable interrupts - may or may not work...
+    asm volatile("sti");
 }
 
 void remap_pic(void)
