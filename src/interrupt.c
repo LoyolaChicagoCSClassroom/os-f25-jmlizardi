@@ -347,14 +347,13 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 }
 
 
-// Remove __attribute__((interrupt)) to test if that's the issue
-void keyboard_handler_simple(void)
+// Simple, safe keyboard handler
+__attribute__((interrupt)) void safe_keyboard_handler(struct interrupt_frame* frame)
 {
-    // Read the scancode to clear the keyboard buffer
-    unsigned char scancode = inb(0x60);
+    // Read scancode to clear keyboard buffer
+    inb(0x60);
     
-    // Don't do ANY output - just acknowledge the interrupt
-    // Send EOI to PIC to acknowledge the interrupt
+    // Send EOI
     outb(0x20, 0x20);
 }
 
@@ -391,9 +390,8 @@ void init_idt() {
         idt_set_gate( i, (uint32_t)stub_isr, 0x08, 0x8E);
     }
     
-    // Don't set a custom keyboard handler - just use stub_isr for everything
-    // This will test if the issue is with our custom handler specifically
-    // idt_set_gate(0x21, (uint32_t)keyboard_handler_simple, 0x08, 0x8e);
+    // Set up the safe keyboard handler
+    idt_set_gate(0x21, (uint32_t)safe_keyboard_handler, 0x08, 0x8e);
     
     // Load the IDT
     idt_flush(&idt_ptr);
@@ -403,6 +401,13 @@ void init_idt() {
     
     // Enable interrupts - but no hardware interrupts should fire since they're all masked
     asm volatile("sti");
+    
+    // Now carefully unmask only the keyboard interrupt (IRQ1)
+    // Read current mask, clear bit 1 (keyboard), write back
+    unsigned char mask = inb(0x21);
+    mask &= ~0x02; // Clear bit 1 (keyboard IRQ)
+    outb(0x21, mask);
+}
 }
 
 void remap_pic(void)
