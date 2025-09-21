@@ -387,7 +387,7 @@ void init_idt() {
     idt_ptr.limit = sizeof(struct idt_entry) * 256 -1;
     idt_ptr.base  = (uint32_t)&idt_entries;
 
-    memset(&idt_entries, 0, sizeof(struct idt_entry)*256);
+    memset((char*)&idt_entries, 0, sizeof(struct idt_entry)*256);
 
     for(i = 0; i < 256; i++){
         idt_set_gate( i, (uint32_t)stub_isr, 0x08, 0x8E);
