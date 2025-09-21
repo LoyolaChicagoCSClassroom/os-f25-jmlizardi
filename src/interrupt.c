@@ -441,5 +441,5 @@ void remap_pic(void)
     outb(0x21 , 0xff);
     outb(0xA1 , 0xff);
     /* Initialization finished */
-    outb(0x21, 0xfd); // Enable keyboard interrupts
+    // outb(0x21, 0xfd); // Enable keyboard interrupts - DISABLED FOR TESTING
 }
