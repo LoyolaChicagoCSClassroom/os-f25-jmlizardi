@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "interrupt.h"
 #include "io.h"
-#include "rprintf.h"
+//#include "rprintf.h"
 #include "terminal.h"
 
 
@@ -352,9 +352,9 @@ __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
     // Read the scancode from the keyboard data port (0x60)
     unsigned char scancode = inb(0x60);
     
-    // Print the scancode to the terminal
-    // Using esp_printf with putc function pointer to display the hex value
-    esp_printf((func_ptr)putc, "Scancode: 0x%02x\n", scancode);
+    // Simple output - just put a character directly to VGA
+    // This avoids complex printf operations in interrupt context
+    putc('K'); // Just show that keyboard interrupt fired
     
     // Send EOI to PIC to acknowledge the interrupt
     outb(0x20, 0x20);
