@@ -353,24 +353,16 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
+    asm("cli");
+    
     // Read the scancode from keyboard data port
     unsigned char scancode = inb(0x60);
     
-    // Simple direct VGA write - write scancode at a fixed position
-    volatile unsigned short *vga = (volatile unsigned short*)0xb8000;
-    
-    // Convert to hex characters properly
-    unsigned char high = (scancode >> 4) & 0xF;
-    unsigned char low = scancode & 0xF;
-    
-    char hex_high = (high < 10) ? ('0' + high) : ('A' + high - 10);
-    char hex_low = (low < 10) ? ('0' + low) : ('A' + low - 10);
-    
-    vga[80] = (0x07 << 8) | hex_high; // First hex digit
-    vga[81] = (0x07 << 8) | hex_low;  // Second hex digit
-    
-    // Send EOI to PIC
+    // Send EOI to PIC  
     outb(0x20,0x20);
+    
+    // Re-enable interrupts before returning
+    asm("sti");
 }
 
 
