@@ -2,6 +2,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "terminal.h"
+#include "rprintf.h"
 
 struct idt_entry idt_entries[256];
 struct idt_ptr   idt_ptr;
