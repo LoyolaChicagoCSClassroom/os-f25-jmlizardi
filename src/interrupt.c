@@ -356,8 +356,10 @@ __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
     // Read the scancode from keyboard data port
     unsigned char scancode = inb(0x60);
     
-    // Print the scancode to VGA buffer
-    esp_printf((func_ptr)putc, "Scancode: 0x%02x\n", scancode);
+    // Simple direct VGA write - write scancode at a fixed position
+    volatile unsigned short *vga = (volatile unsigned short*)0xb8000;
+    vga[80] = (0x07 << 8) | ('0' + ((scancode >> 4) & 0xF)); // First hex digit
+    vga[81] = (0x07 << 8) | ('0' + (scancode & 0xF));        // Second hex digit
     
     // Send EOI to PIC
     outb(0x20,0x20);
