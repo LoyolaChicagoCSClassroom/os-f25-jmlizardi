@@ -68,7 +68,12 @@ unsigned char keyboard_map[128] =
     __asm__ volatile ("mov %%cs, %0" : "=r"(cs));
     return cs & 0x3;
 }
+// Remap PIC and enable keyboard IRQ *NOT IN USE KEEPING IT TO MAKE INTERRUPTS WORK LATER*
+    //remap_pic();
+    //IRQ_clear_mask(1); // Unmask keyboard IRQ
+    //init_idt(); // Initialize IDT (if not already done)
 
+    // Print current execution level
     void print_execution_level() { // makes a easily callable method to print cpl
 	int ring = get_cpl(); // current privilge level
        esp_printf((func_ptr)putc, "Current execution level is ring %d\n", ring);
