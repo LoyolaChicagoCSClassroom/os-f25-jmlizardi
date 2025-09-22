@@ -353,7 +353,14 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
     asm("cli");
-    /* do something */
+    
+    // Read the scancode from keyboard data port
+    unsigned char scancode = inb(0x60);
+    
+    // Print the scancode to VGA buffer
+    esp_printf((func_ptr)putc, "Scancode: 0x%02x\n", scancode);
+    
+    // Send EOI to PIC
     outb(0x20,0x20);
 }
 
@@ -425,5 +432,5 @@ void remap_pic(void)
     outb(0x21 , 0xff);
     outb(0xA1 , 0xff);
     /* Initialization finished */
-    // outb(0x21, 0xfd); // Enable keyboard interrupts - DISABLED FOR TESTING
+    // Keyboard interrupt will be enabled via IRQ_clear_mask(1) in kernel_main
 }
