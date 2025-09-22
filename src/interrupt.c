@@ -380,8 +380,9 @@ static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags
 void init_idt() {
     int i;
 
-    extern struct gdt_entry_bits gdt[];
-    write_tss(&gdt[5]);
+    // Skip TSS setup for now
+    // extern struct gdt_entry_bits gdt[];
+    // write_tss(&gdt[5]);
 
     idt_ptr.limit = sizeof(struct idt_entry) * 256 -1;
     idt_ptr.base  = (uint32_t)&idt_entries;
