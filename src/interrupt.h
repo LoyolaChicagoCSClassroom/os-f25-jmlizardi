@@ -150,6 +150,7 @@ void PIC_sendEOI(unsigned char irq);
 void IRQ_clear_mask(unsigned char IRQline);
 void IRQ_set_mask(unsigned char IRQline);
 void init_idt();
+void remap_pic(void);
 void tss_flush (uint16_t tss);
 void load_gdt();
 #endif
