@@ -55,13 +55,18 @@ const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
      }
      print_execution_level(); // After the print executes, showing it works & scrolls print CPL 
 // Remap PIC and enable keyboard IRQ
-    remap_pic();
-    IRQ_clear_mask(1); // Unmask keyboard IRQ
-    init_idt(); // Initialize IDT (if not already done)
+    //remap_pic();
+    //IRQ_clear_mask(1); // Unmask keyboard IRQ
+    //init_idt(); // Initialize IDT (if not already done)
 
-    // Main loop can be empty or used for other tasks; keyboard input is now interrupt-driven
+    // Polling-based keyboard input instead of interrupts
     while (1) {
-        // Idle loop
+        // Check if keyboard has data
+        unsigned char status = inb(0x64);
+        if (status & 0x01) {  // Output buffer full
+            unsigned char scancode = inb(0x60);
+            esp_printf((func_ptr)putc, "Scancode: 0x%02x\n", scancode);
+        }
     }
 
  }
