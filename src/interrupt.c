@@ -353,8 +353,6 @@ __attribute__((interrupt)) void pit_handler(struct interrupt_frame* frame)
 
 __attribute__((interrupt)) void keyboard_handler(struct interrupt_frame* frame)
 {
-    asm("cli");
-    
     // Read the scancode from keyboard data port
     unsigned char scancode = inb(0x60);
     
@@ -406,6 +404,9 @@ void init_idt() {
     idt_set_gate(0x21, (uint32_t)keyboard_handler,0x08, 0x8e);
     
     idt_flush(&idt_ptr);
+    
+    // Enable interrupts
+    asm volatile("sti");
 }
 
 void remap_pic(void)
