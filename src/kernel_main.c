@@ -120,8 +120,17 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
-    // Polling-based keyboard input with translation
-    esp_printf((func_ptr)putc, "\nKeyboard ready - start typing:\n");
+    // Interactive keyboard commands for page allocator
+    esp_printf((func_ptr)putc, "\nPage Allocator Commands:\n");
+    esp_printf((func_ptr)putc, "Press '1' to allocate 1 page\n");
+    esp_printf((func_ptr)putc, "Press '2' to allocate 2 pages\n");
+    esp_printf((func_ptr)putc, "Press 'f' to free all allocated pages\n");
+    esp_printf((func_ptr)putc, "Press 's' to show allocator status\n");
+    esp_printf((func_ptr)putc, "Other keys will show scancode\n\n");
+    
+    // Track allocated pages for interactive demo
+    static struct ppage *demo_allocated_pages = NULL;
+    
     while (1) {
         // Check if keyboard has data
         unsigned char status = inb(0x64);
@@ -137,8 +146,52 @@ unsigned char keyboard_map[128] =
             char ascii = keyboard_map[scancode];
             
             if (ascii != 0) {
-                // Print both scancode and translated character
-                esp_printf((func_ptr)putc, "Scancode: 0x%02x -> '%c'\n", scancode, ascii);
+                // Handle page allocator commands
+                if (ascii == '1') {
+                    esp_printf((func_ptr)putc, "Allocating 1 page...\n");
+                    struct ppage *pages = allocate_physical_pages(1);
+                    if (pages) {
+                        esp_printf((func_ptr)putc, "Success! Allocated page at 0x%08x\n", 
+                                   (unsigned int)pages->physical_addr);
+                        // Link to our demo list
+                        pages->next = demo_allocated_pages;
+                        if (demo_allocated_pages) demo_allocated_pages->prev = pages;
+                        demo_allocated_pages = pages;
+                    } else {
+                        esp_printf((func_ptr)putc, "Failed to allocate page\n");
+                    }
+                } else if (ascii == '2') {
+                    esp_printf((func_ptr)putc, "Allocating 2 pages...\n");
+                    struct ppage *pages = allocate_physical_pages(2);
+                    if (pages) {
+                        esp_printf((func_ptr)putc, "Success! Allocated 2 pages starting at 0x%08x\n", 
+                                   (unsigned int)pages->physical_addr);
+                        // Link to our demo list
+                        pages->next = demo_allocated_pages;
+                        if (demo_allocated_pages) demo_allocated_pages->prev = pages;
+                        demo_allocated_pages = pages;
+                    } else {
+                        esp_printf((func_ptr)putc, "Failed to allocate 2 pages\n");
+                    }
+                } else if (ascii == 'f' || ascii == 'F') {
+                    if (demo_allocated_pages) {
+                        esp_printf((func_ptr)putc, "Freeing all allocated pages...\n");
+                        free_physical_pages(demo_allocated_pages);
+                        demo_allocated_pages = NULL;
+                        esp_printf((func_ptr)putc, "All pages freed!\n");
+                    } else {
+                        esp_printf((func_ptr)putc, "No pages to free\n");
+                    }
+                } else if (ascii == 's' || ascii == 'S') {
+                    esp_printf((func_ptr)putc, "Page allocator status:\n");
+                    // Count free pages by walking the free list
+                    // (This would require adding a status function to page.c)
+                    esp_printf((func_ptr)putc, "Demo allocated pages: %s\n", 
+                               demo_allocated_pages ? "Yes" : "None");
+                } else {
+                    // Show scancode for other keys
+                    esp_printf((func_ptr)putc, "Key '%c' (scancode: 0x%02x)\n", ascii, scancode);
+                }
             }
         }
     }
