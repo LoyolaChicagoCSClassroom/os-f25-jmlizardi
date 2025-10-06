@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "page.h"
 
 // Static array of 128 pages, each 2mb in length covers 256 megs of memory
@@ -6,7 +7,7 @@ struct ppage physical_page_array[128];
 // Pointer to the head of the free physical pages list
 static struct ppage *free_physical_pages_head = NULL;
 
-// Initialize the linked list of free pages
+// Initialize the linked list of free pages - #4
 void init_pfa_list(void) {
     int i;
     
@@ -31,7 +32,7 @@ void init_pfa_list(void) {
     free_physical_pages_head = &physical_page_array[0];
 }
 
-// Allocate one or more physical pages from the free list
+// Allocate one or more physical pages from the free list - #5
 struct ppage *allocate_physical_pages(unsigned int npages) {
     if (npages == 0 || free_physical_pages_head == NULL) {
         return NULL; // Invalid request or no free pages
