@@ -3,6 +3,7 @@
 #include "rprintf.h"
 #include "interrupt.h"
 #include "io.h"
+#include "page.h"
 
 #define MULTIBOOT2_HEADER_MAGIC         0xe85250d6
 
@@ -94,6 +95,30 @@ unsigned char keyboard_map[128] =
      esp_printf((func_ptr)putc, "Line %d: Justin Was Here!\n", line_number++);
      }
      print_execution_level(); // After the print executes, showing it works & scrolls print CPL 
+
+    // Test the page frame allocator
+    esp_printf((func_ptr)putc, "\n=== Testing Page Frame Allocator ===\n");
+    
+    // Initialize the page allocator
+    init_pfa_list();
+    esp_printf((func_ptr)putc, "Page allocator initialized.\n");
+    
+    // Allocate 2 pages
+    struct ppage *allocated_pages = allocate_physical_pages(2);
+    if (allocated_pages != NULL) {
+        esp_printf((func_ptr)putc, "Successfully allocated 2 pages starting at: 0x%08x\n", 
+                   (unsigned int)allocated_pages->physical_addr);
+    } else {
+        esp_printf((func_ptr)putc, "Failed to allocate 2 pages\n");
+    }
+    
+    // Free the pages
+    if (allocated_pages != NULL) {
+        free_physical_pages(allocated_pages);
+        esp_printf((func_ptr)putc, "Freed 2 pages back to the allocator.\n");
+    }
+    
+    esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
     // Polling-based keyboard input with translation
     esp_printf((func_ptr)putc, "\nKeyboard ready - start typing:\n");
