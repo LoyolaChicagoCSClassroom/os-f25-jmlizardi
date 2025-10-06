@@ -24,7 +24,8 @@ SDIR = src
 OBJS := \
 	rprintf.o \
 	terminal.o \
-	kernel_main.o
+	kernel_main.o \
+	interrupt.o
 
 # Make sure to keep a blank line here after OBJS list
 
