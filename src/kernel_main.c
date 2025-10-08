@@ -121,6 +121,7 @@ unsigned char keyboard_map[128] =
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
     // Interactive keyboard commands for page allocator
+    // Implemented to control page allocation via keyboard for demo purposes
     esp_printf((func_ptr)putc, "\nPage Allocator Commands:\n");
     esp_printf((func_ptr)putc, "Press '1' to allocate 1 page\n");
     esp_printf((func_ptr)putc, "Press '2' to allocate 2 pages\n");
@@ -147,6 +148,7 @@ unsigned char keyboard_map[128] =
             
             if (ascii != 0) {
                 // Handle page allocator commands
+                // Used CoPilot to generate this section, utilized for testing page allocator
                 if (ascii == '1') {
                     esp_printf((func_ptr)putc, "Allocating 1 page...\n");
                     struct ppage *pages = allocate_physical_pages(1);
