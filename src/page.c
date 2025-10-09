@@ -9,11 +9,11 @@ static struct ppage *free_physical_pages_head = NULL;
 
 // Initialize the linked list of free pages - #4
 void init_pfa_list(void) {
-    int i;
-    
+    int i; // loop counter
+
     // Initialize the first page
-    physical_page_array[0].next = &physical_page_array[1];
-    physical_page_array[0].prev = NULL;
+    physical_page_array[0].next = &physical_page_array[1]; // points to page 1
+    physical_page_array[0].prev = NULL; 
     physical_page_array[0].physical_addr = (void*)(0x100000); // Start at 1MB
     
     // Initialize middle pages
@@ -34,6 +34,7 @@ void init_pfa_list(void) {
 
 // Allocate one or more physical pages from the free list - #5
 struct ppage *allocate_physical_pages(unsigned int npages) {
+    // Check for valid request
     if (npages == 0 || free_physical_pages_head == NULL) {
         return NULL; // Invalid request or no free pages
     }
@@ -44,7 +45,7 @@ struct ppage *allocate_physical_pages(unsigned int npages) {
     
     // Find npages consecutive pages
     while (current != NULL && count < npages) {
-        current = current->next;
+        current = current->next; // Move to next page
         count++;
     }
     
@@ -58,7 +59,7 @@ struct ppage *allocate_physical_pages(unsigned int npages) {
         current->prev = NULL;
     }
     
-    // Terminate the allocated list
+    // Terminate the allocated list, separating pages from free list
     if (allocated_list != NULL) {
         struct ppage *last_allocated = allocated_list;
         for (unsigned int i = 0; i < npages - 1; i++) {

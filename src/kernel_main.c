@@ -5,10 +5,6 @@
 #include "io.h"
 #include "page.h"
 
-#define MULTIBOOT2_HEADER_MAGIC         0xe85250d6
-
-
-
 const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
  { 0xE85250D6, 0, 24, (unsigned)(0 - (0xE85250D6u + 0u + 24u)), 0, 8 };
  //had to modify this from original kernel_main.c... OS was permantly rebooting
@@ -69,10 +65,6 @@ unsigned char keyboard_map[128] =
     __asm__ volatile ("mov %%cs, %0" : "=r"(cs));
     return cs & 0x3;
 }
-// Remap PIC and enable keyboard IRQ *NOT IN USE KEEPING IT TO MAKE INTERRUPTS WORK LATER*
-    //remap_pic();
-    //IRQ_clear_mask(1); // Unmask keyboard IRQ
-    //init_idt(); // Initialize IDT (if not already done)
 
     // Print current execution level
     void print_execution_level() { // makes a easily callable method to print cpl
