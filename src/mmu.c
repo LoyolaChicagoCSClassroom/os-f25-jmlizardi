@@ -89,12 +89,12 @@ void loadPageDirectory(struct page_directory_entry *page_dir) {
 }
 
 /**
- * Enable paging by setting CR0 bits 0 and 31
+ * Enable paging by setting CR0 bit 31 (and preserve bit 0)
  */
 void enable_paging(void) {
     asm volatile(
         "mov %%cr0, %%eax\n"
-        "or $0x80000001,%%eax\n"  // Set bits 0 (PE) and 31 (PG)
+        "or $0x80000000,%%eax\n"  // Set only bit 31 (PG) - don't mess with bit 0 (PE)
         "mov %%eax,%%cr0"
         :
         :

@@ -163,10 +163,17 @@ unsigned char keyboard_map[128] =
     esp_printf((func_ptr)putc, "Page directory loaded into CR3 register.\n");
     esp_printf((func_ptr)putc, "Note: Paging is NOT enabled yet, so this should be safe.\n\n");
 
-    /*
-    // STEP 4 - STILL COMMENTED OUT (THE DANGEROUS ONE)
+    // === Assignment #4: MMU Testing - Step 4 (FINAL TEST) ===
+    esp_printf((func_ptr)putc, "=== Step 4: Testing enable_paging function (THE MOMENT OF TRUTH) ===\n");
+    
+    esp_printf((func_ptr)putc, "About to enable paging - this is where it might crash...\n");
+    esp_printf((func_ptr)putc, "Fixed: Only setting CR0 bit 31 (PG), not touching bit 0 (PE).\n");
+    
     enable_paging();
-    */
+    
+    esp_printf((func_ptr)putc, "*** SUCCESS! *** Paging is now enabled!\n");
+    esp_printf((func_ptr)putc, "Virtual memory is active and working!\n");
+    esp_printf((func_ptr)putc, "All memory accesses are going through the MMU.\n\n");
 
     // Test that memory mapping works by allocating and mapping some pages
     esp_printf((func_ptr)putc, "=== Page allocator test (without MMU functions) ===\n");
