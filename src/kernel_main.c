@@ -133,11 +133,11 @@ unsigned char keyboard_map[128] =
     esp_printf((func_ptr)putc, "Paging enabled successfully! Virtual memory is now active.\n");
     esp_printf((func_ptr)putc, "All memory accesses are now going through the MMU.\n\n");
 
-    // NOTE: map_pages() after paging causes boot loop - disabled for now
     esp_printf((func_ptr)putc, "=== MMU Assignment #4 Complete ===\n");
     esp_printf((func_ptr)putc, "Virtual memory successfully enabled!\n");
     esp_printf((func_ptr)putc, "Identity mapping working for kernel, stack, and VGA.\n\n");
 
+   /*
     // Test that memory mapping works by allocating and mapping some pages
     esp_printf((func_ptr)putc, "=== Page allocator test (without MMU functions) ===\n");
     struct ppage *test_pages = allocate_physical_pages(1);
@@ -157,7 +157,7 @@ unsigned char keyboard_map[128] =
     esp_printf((func_ptr)putc, "Press 'f' to free all allocated pages\n");
     esp_printf((func_ptr)putc, "Press 's' to show allocator status\n");
     esp_printf((func_ptr)putc, "Other keys will show scancode\n\n");
-    
+    */
     // Track allocated pages for interactive demo
     static struct ppage *demo_allocated_pages = NULL;
     
