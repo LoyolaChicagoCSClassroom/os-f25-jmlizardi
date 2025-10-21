@@ -105,14 +105,11 @@ void enable_paging(void) {
  * Identity map the kernel, stack, and video buffer
  */
 void identity_map_kernel(struct page_directory_entry *page_dir) {
-    esp_printf((func_ptr)putc, "  Initializing page directory and page table...\n");
-    
     // Initialize page directory and page table to zero
     for (int i = 0; i < 1024; i++) {
         page_dir[i].present = 0;
         pt[i].present = 0;
     }
-    esp_printf((func_ptr)putc, "  Page tables cleared.\n");
     
     // 1. Identity map kernel from 0x100000 to &_end_kernel
     uint32_t kernel_start = 0x100000;  // 1MB
@@ -121,7 +118,7 @@ void identity_map_kernel(struct page_directory_entry *page_dir) {
     // Round up to next page boundary
     kernel_end = (kernel_end + 4095) & ~4095;
     
-    esp_printf((func_ptr)putc, "  Identity mapping kernel: 0x%08x to 0x%08x\n", 
+    esp_printf((func_ptr)putc, "Identity mapping kernel: 0x%08x to 0x%08x\n", 
                kernel_start, kernel_end);
     
     // Map kernel pages in 4KB chunks
@@ -134,7 +131,6 @@ void identity_map_kernel(struct page_directory_entry *page_dir) {
         map_pages((void*)addr, &tmp, page_dir);
         kernel_pages++;
     }
-    esp_printf((func_ptr)putc, "  Mapped %d kernel pages.\n", kernel_pages);
     
     // 2. Identity map stack memory
     uint32_t esp;
@@ -142,8 +138,7 @@ void identity_map_kernel(struct page_directory_entry *page_dir) {
     
     // Map a few pages around the stack pointer (4KB pages)
     uint32_t stack_base = esp & ~0xFFF;  // Align to page boundary
-    esp_printf((func_ptr)putc, "  Current ESP: 0x%08x, mapping stack around: 0x%08x\n", 
-               esp, stack_base);
+    esp_printf((func_ptr)putc, "Identity mapping stack around: 0x%08x\n", stack_base);
     
     // Map 8 pages for stack (32KB total) - going downward from current stack
     for (int i = 0; i < 8; i++) {
@@ -154,15 +149,14 @@ void identity_map_kernel(struct page_directory_entry *page_dir) {
         tmp.physical_addr = (void*)stack_page;
         map_pages((void*)stack_page, &tmp, page_dir);
     }
-    esp_printf((func_ptr)putc, "  Mapped 8 stack pages.\n");
     
     // 3. Identity map video buffer at 0xB8000
-    esp_printf((func_ptr)putc, "  Identity mapping video buffer: 0x000B8000\n");
+    esp_printf((func_ptr)putc, "Identity mapping video buffer: 0x000B8000\n");
     struct ppage tmp;
     tmp.next = NULL;
     tmp.prev = NULL;
     tmp.physical_addr = (void*)0xB8000;
     map_pages((void*)0xB8000, &tmp, page_dir);
     
-    esp_printf((func_ptr)putc, "  Identity mapping complete - all critical regions mapped.\n");
+    esp_printf((func_ptr)putc, "Identity mapping complete (%d kernel pages mapped).\n", kernel_pages);
 }

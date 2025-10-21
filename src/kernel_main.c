@@ -113,67 +113,48 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
-    // === Assignment #4: MMU Testing - Step 1 ===
-    esp_printf((func_ptr)putc, "=== Step 1: Testing MMU structure access ===\n");
+    // === Assignment #4: MMU Setup and Paging ===
+    esp_printf((func_ptr)putc, "=== Setting up MMU and enabling paging ===\n");
     
-    // Test 1: Just access the page directory structure
+    // Get page directory pointer from mmu.c
     extern struct page_directory_entry pd[1024];
-    esp_printf((func_ptr)putc, "Page directory address: 0x%08x\n", (unsigned int)pd);
-    esp_printf((func_ptr)putc, "Page directory size: %d bytes\n", sizeof(pd));
     
-    // Test 2: Access page table structure  
-    extern struct page pt[1024];
-    esp_printf((func_ptr)putc, "Page table address: 0x%08x\n", (unsigned int)pt);
-    esp_printf((func_ptr)putc, "Page table size: %d bytes\n", sizeof(pt));
-    
-    // Test 3: Initialize a few entries manually (no function calls yet)
-    esp_printf((func_ptr)putc, "Manually initializing first page directory entry...\n");
-    pd[0].present = 0;  // Just set to 0 for now
-    pd[0].rw = 0;
-    esp_printf((func_ptr)putc, "Page directory entry initialized successfully.\n");
-    
-    esp_printf((func_ptr)putc, "MMU structure access test complete - no crashes!\n\n");
-
-    // === Assignment #4: MMU Testing - Step 2 ===
-    esp_printf((func_ptr)putc, "=== Step 2: Testing identity_map_kernel function ===\n");
-    
-    // Test the identity mapping function
-    esp_printf((func_ptr)putc, "Calling identity_map_kernel()...\n");
+    // Identity map kernel, stack, and video buffer
     identity_map_kernel(pd);
-    esp_printf((func_ptr)putc, "identity_map_kernel() completed successfully!\n");
     
-    // Check if the page directory was set up
-    if (pd[0].present) {
-        esp_printf((func_ptr)putc, "Page directory entry 0 is present - good!\n");
-        esp_printf((func_ptr)putc, "PD[0]: present=%d, rw=%d, frame=0x%x\n", 
-                   pd[0].present, pd[0].rw, pd[0].frame);
-    } else {
-        esp_printf((func_ptr)putc, "Warning: Page directory entry 0 is not present\n");
-    }
-    
-    esp_printf((func_ptr)putc, "Identity mapping test complete - no crashes!\n\n");
-
-    // === Assignment #4: MMU Testing - Step 3 ===
-    esp_printf((func_ptr)putc, "=== Step 3: Testing loadPageDirectory function ===\n");
-    
-    // Test loading the page directory into CR3 (without enabling paging)
-    esp_printf((func_ptr)putc, "About to call loadPageDirectory()...\n");
+    // Load page directory into CR3
+    esp_printf((func_ptr)putc, "Loading page directory into CR3...\n");
     loadPageDirectory(pd);
-    esp_printf((func_ptr)putc, "loadPageDirectory() completed successfully!\n");
-    esp_printf((func_ptr)putc, "Page directory loaded into CR3 register.\n");
-    esp_printf((func_ptr)putc, "Note: Paging is NOT enabled yet, so this should be safe.\n\n");
-
-    // === Assignment #4: MMU Testing - Step 4 (FINAL TEST) ===
-    esp_printf((func_ptr)putc, "=== Step 4: Testing enable_paging function (THE MOMENT OF TRUTH) ===\n");
     
-    esp_printf((func_ptr)putc, "About to enable paging - this is where it might crash...\n");
-    esp_printf((func_ptr)putc, "Fixed: Only setting CR0 bit 31 (PG), not touching bit 0 (PE).\n");
-    
+    // Enable paging
+    esp_printf((func_ptr)putc, "Enabling paging...\n");
     enable_paging();
     
-    esp_printf((func_ptr)putc, "*** SUCCESS! *** Paging is now enabled!\n");
-    esp_printf((func_ptr)putc, "Virtual memory is active and working!\n");
-    esp_printf((func_ptr)putc, "All memory accesses are going through the MMU.\n\n");
+    esp_printf((func_ptr)putc, "Paging enabled successfully! Virtual memory is now active.\n");
+    esp_printf((func_ptr)putc, "All memory accesses are now going through the MMU.\n\n");
+
+    // Test that memory mapping works by allocating and mapping some pages
+    esp_printf((func_ptr)putc, "=== Testing page mapping functionality ===\n");
+    struct ppage *test_pages = allocate_physical_pages(1);
+    if (test_pages != NULL) {
+        void *virtual_addr = (void*)0x400000;  // Map to 4MB virtual address
+        esp_printf((func_ptr)putc, "Mapping physical page 0x%08x to virtual address 0x%08x\n", 
+                   (unsigned int)test_pages->physical_addr, (unsigned int)virtual_addr);
+        
+        void *mapped_addr = map_pages(virtual_addr, test_pages, pd);
+        if (mapped_addr != NULL) {
+            esp_printf((func_ptr)putc, "Successfully mapped page to virtual address: 0x%08x\n", 
+                       (unsigned int)mapped_addr);
+            
+            // Test writing to the mapped memory
+            uint32_t *test_ptr = (uint32_t*)virtual_addr;
+            *test_ptr = 0xDEADBEEF;
+            esp_printf((func_ptr)putc, "Wrote 0xDEADBEEF to virtual address, read back: 0x%08x\n", *test_ptr);
+        } else {
+            esp_printf((func_ptr)putc, "Failed to map page\n");
+        }
+    }
+    esp_printf((func_ptr)putc, "Page mapping test complete.\n\n");
 
     // Test that memory mapping works by allocating and mapping some pages
     esp_printf((func_ptr)putc, "=== Page allocator test (without MMU functions) ===\n");
