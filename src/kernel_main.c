@@ -153,9 +153,18 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "Identity mapping test complete - no crashes!\n\n");
 
-    /*
-    // STILL COMMENTED OUT - ASSEMBLY FUNCTIONS
+    // === Assignment #4: MMU Testing - Step 3 ===
+    esp_printf((func_ptr)putc, "=== Step 3: Testing loadPageDirectory function ===\n");
+    
+    // Test loading the page directory into CR3 (without enabling paging)
+    esp_printf((func_ptr)putc, "About to call loadPageDirectory()...\n");
     loadPageDirectory(pd);
+    esp_printf((func_ptr)putc, "loadPageDirectory() completed successfully!\n");
+    esp_printf((func_ptr)putc, "Page directory loaded into CR3 register.\n");
+    esp_printf((func_ptr)putc, "Note: Paging is NOT enabled yet, so this should be safe.\n\n");
+
+    /*
+    // STEP 4 - STILL COMMENTED OUT (THE DANGEROUS ONE)
     enable_paging();
     */
 
