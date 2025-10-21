@@ -114,23 +114,27 @@ unsigned char keyboard_map[128] =
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
     // === Assignment #4: MMU Setup and Paging ===
-    esp_printf((func_ptr)putc, "=== Setting up MMU and enabling paging ===\n");
+    esp_printf((func_ptr)putc, "=== Testing MMU step by step ===\n");
     
-    // Get page directory pointer from mmu.c
+    // Test 1: Just initialize page directory without enabling paging
+    esp_printf((func_ptr)putc, "Step 1: Getting page directory pointer...\n");
     extern struct page_directory_entry pd[1024];
+    esp_printf((func_ptr)putc, "Page directory address: 0x%08x\n", (unsigned int)pd);
     
-    // Identity map kernel, stack, and video buffer
+    // Test 2: Try identity mapping (this might be where it crashes)
+    esp_printf((func_ptr)putc, "Step 2: Setting up identity mapping...\n");
     identity_map_kernel(pd);
+    esp_printf((func_ptr)putc, "Identity mapping completed successfully!\n");
     
-    // Load page directory into CR3
-    esp_printf((func_ptr)putc, "Loading page directory into CR3...\n");
+    // Test 3: Load page directory (don't enable paging yet)
+    esp_printf((func_ptr)putc, "Step 3: Loading page directory into CR3...\n");
     loadPageDirectory(pd);
+    esp_printf((func_ptr)putc, "Page directory loaded into CR3!\n");
     
-    // Enable paging
-    esp_printf((func_ptr)putc, "Enabling paging...\n");
+    // Test 4: Enable paging (this is most likely to crash)
+    esp_printf((func_ptr)putc, "Step 4: About to enable paging - this is the critical moment...\n");
     enable_paging();
-    
-    esp_printf((func_ptr)putc, "Paging enabled successfully! Virtual memory is now active.\n");
+    esp_printf((func_ptr)putc, "SUCCESS! Paging enabled and system is stable!\n");
     esp_printf((func_ptr)putc, "All memory accesses are now going through the MMU.\n\n");
 
     // Test that memory mapping works by allocating and mapping some pages
