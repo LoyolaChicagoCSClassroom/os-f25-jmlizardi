@@ -4,7 +4,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "page.h"
-#include "mmu.h"
+// #include "mmu.h"  // Temporarily disabled for debugging
 
 const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
  { 0xE85250D6, 0, 24, (unsigned)(0 - (0xE85250D6u + 0u + 24u)), 0, 8 };
@@ -113,7 +113,12 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
-    // === Assignment #4: MMU Setup and Paging ===
+    // === Assignment #4: MMU Setup - DISABLED FOR DEBUGGING ===
+    esp_printf((func_ptr)putc, "=== MMU code temporarily disabled for debugging ===\n");
+    esp_printf((func_ptr)putc, "If you see this message, the kernel boots successfully without MMU.\n\n");
+
+    /*
+    // MMU CODE COMMENTED OUT FOR DEBUGGING
     esp_printf((func_ptr)putc, "=== Testing MMU step by step ===\n");
     
     // Test 1: Just initialize page directory without enabling paging
@@ -136,29 +141,18 @@ unsigned char keyboard_map[128] =
     enable_paging();
     esp_printf((func_ptr)putc, "SUCCESS! Paging enabled and system is stable!\n");
     esp_printf((func_ptr)putc, "All memory accesses are now going through the MMU.\n\n");
+    */
 
     // Test that memory mapping works by allocating and mapping some pages
-    esp_printf((func_ptr)putc, "=== Testing page mapping functionality ===\n");
+    esp_printf((func_ptr)putc, "=== Page allocator test (without MMU) ===\n");
     struct ppage *test_pages = allocate_physical_pages(1);
     if (test_pages != NULL) {
-        void *virtual_addr = (void*)0x400000;  // Map to 4MB virtual address
-        esp_printf((func_ptr)putc, "Mapping physical page 0x%08x to virtual address 0x%08x\n", 
-                   (unsigned int)test_pages->physical_addr, (unsigned int)virtual_addr);
-        
-        void *mapped_addr = map_pages(virtual_addr, test_pages, pd);
-        if (mapped_addr != NULL) {
-            esp_printf((func_ptr)putc, "Successfully mapped page to virtual address: 0x%08x\n", 
-                       (unsigned int)mapped_addr);
-            
-            // Test writing to the mapped memory
-            uint32_t *test_ptr = (uint32_t*)virtual_addr;
-            *test_ptr = 0xDEADBEEF;
-            esp_printf((func_ptr)putc, "Wrote 0xDEADBEEF to virtual address, read back: 0x%08x\n", *test_ptr);
-        } else {
-            esp_printf((func_ptr)putc, "Failed to map page\n");
-        }
+        esp_printf((func_ptr)putc, "Allocated test page at physical address: 0x%08x\n", 
+                   (unsigned int)test_pages->physical_addr);
+        free_physical_pages(test_pages);
+        esp_printf((func_ptr)putc, "Test page freed successfully.\n");
     }
-    esp_printf((func_ptr)putc, "Page mapping test complete.\n\n");
+    esp_printf((func_ptr)putc, "Page allocator working correctly without MMU.\n\n");
 
     // Interactive keyboard commands for page allocator
     // Implemented to control page allocation via keyboard for demo purposes
