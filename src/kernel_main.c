@@ -134,9 +134,27 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "MMU structure access test complete - no crashes!\n\n");
 
-    /*
-    // MORE ADVANCED MMU CODE - STILL COMMENTED OUT
+    // === Assignment #4: MMU Testing - Step 2 ===
+    esp_printf((func_ptr)putc, "=== Step 2: Testing identity_map_kernel function ===\n");
+    
+    // Test the identity mapping function
+    esp_printf((func_ptr)putc, "Calling identity_map_kernel()...\n");
     identity_map_kernel(pd);
+    esp_printf((func_ptr)putc, "identity_map_kernel() completed successfully!\n");
+    
+    // Check if the page directory was set up
+    if (pd[0].present) {
+        esp_printf((func_ptr)putc, "Page directory entry 0 is present - good!\n");
+        esp_printf((func_ptr)putc, "PD[0]: present=%d, rw=%d, frame=0x%x\n", 
+                   pd[0].present, pd[0].rw, pd[0].frame);
+    } else {
+        esp_printf((func_ptr)putc, "Warning: Page directory entry 0 is not present\n");
+    }
+    
+    esp_printf((func_ptr)putc, "Identity mapping test complete - no crashes!\n\n");
+
+    /*
+    // STILL COMMENTED OUT - ASSEMBLY FUNCTIONS
     loadPageDirectory(pd);
     enable_paging();
     */
