@@ -4,7 +4,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "page.h"
-// #include "mmu.h"  // Temporarily disabled for debugging
+#include "mmu.h"  // Re-enabled for step-by-step testing
 
 const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
  { 0xE85250D6, 0, 24, (unsigned)(0 - (0xE85250D6u + 0u + 24u)), 0, 8 };
@@ -113,38 +113,36 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
-    // === Assignment #4: MMU Setup - DISABLED FOR DEBUGGING ===
-    esp_printf((func_ptr)putc, "=== MMU code temporarily disabled for debugging ===\n");
-    esp_printf((func_ptr)putc, "If you see this message, the kernel boots successfully without MMU.\n\n");
-
-    /*
-    // MMU CODE COMMENTED OUT FOR DEBUGGING
-    esp_printf((func_ptr)putc, "=== Testing MMU step by step ===\n");
+    // === Assignment #4: MMU Testing - Step 1 ===
+    esp_printf((func_ptr)putc, "=== Step 1: Testing MMU structure access ===\n");
     
-    // Test 1: Just initialize page directory without enabling paging
-    esp_printf((func_ptr)putc, "Step 1: Getting page directory pointer...\n");
+    // Test 1: Just access the page directory structure
     extern struct page_directory_entry pd[1024];
     esp_printf((func_ptr)putc, "Page directory address: 0x%08x\n", (unsigned int)pd);
+    esp_printf((func_ptr)putc, "Page directory size: %d bytes\n", sizeof(pd));
     
-    // Test 2: Try identity mapping (this might be where it crashes)
-    esp_printf((func_ptr)putc, "Step 2: Setting up identity mapping...\n");
+    // Test 2: Access page table structure  
+    extern struct page pt[1024];
+    esp_printf((func_ptr)putc, "Page table address: 0x%08x\n", (unsigned int)pt);
+    esp_printf((func_ptr)putc, "Page table size: %d bytes\n", sizeof(pt));
+    
+    // Test 3: Initialize a few entries manually (no function calls yet)
+    esp_printf((func_ptr)putc, "Manually initializing first page directory entry...\n");
+    pd[0].present = 0;  // Just set to 0 for now
+    pd[0].rw = 0;
+    esp_printf((func_ptr)putc, "Page directory entry initialized successfully.\n");
+    
+    esp_printf((func_ptr)putc, "MMU structure access test complete - no crashes!\n\n");
+
+    /*
+    // MORE ADVANCED MMU CODE - STILL COMMENTED OUT
     identity_map_kernel(pd);
-    esp_printf((func_ptr)putc, "Identity mapping completed successfully!\n");
-    
-    // Test 3: Load page directory (don't enable paging yet)
-    esp_printf((func_ptr)putc, "Step 3: Loading page directory into CR3...\n");
     loadPageDirectory(pd);
-    esp_printf((func_ptr)putc, "Page directory loaded into CR3!\n");
-    
-    // Test 4: Enable paging (this is most likely to crash)
-    esp_printf((func_ptr)putc, "Step 4: About to enable paging - this is the critical moment...\n");
     enable_paging();
-    esp_printf((func_ptr)putc, "SUCCESS! Paging enabled and system is stable!\n");
-    esp_printf((func_ptr)putc, "All memory accesses are now going through the MMU.\n\n");
     */
 
     // Test that memory mapping works by allocating and mapping some pages
-    esp_printf((func_ptr)putc, "=== Page allocator test (without MMU) ===\n");
+    esp_printf((func_ptr)putc, "=== Page allocator test (without MMU functions) ===\n");
     struct ppage *test_pages = allocate_physical_pages(1);
     if (test_pages != NULL) {
         esp_printf((func_ptr)putc, "Allocated test page at physical address: 0x%08x\n", 
