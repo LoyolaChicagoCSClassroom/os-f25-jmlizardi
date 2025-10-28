@@ -133,9 +133,9 @@ unsigned char keyboard_map[128] =
     unsigned int cr0;
     asm volatile("mov %%cr0, %0" : "=r"(cr0));
     if (cr0 & (1 << 31)) {
-        esp_printf((func_ptr)putc, "✅ Paging is ENABLED (MMU active, CR0.PG bit set)\n");
+        esp_printf((func_ptr)putc, "Paging is ENABLED (MMU active, CR0.PG bit set)\n");
     } else {
-        esp_printf((func_ptr)putc, "❌ Paging is DISABLED (MMU not active)\n");
+        esp_printf((func_ptr)putc, "Paging is DISABLED (MMU not active)\n");
     }
 
     
