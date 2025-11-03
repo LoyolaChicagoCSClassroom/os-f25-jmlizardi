@@ -26,8 +26,9 @@ OBJS := \
 	terminal.o \
 	kernel_main.o \
 	interrupt.o \
-	page.o \
-	mmu.o
+	ide.o \
+	fat.o \
+	malloc.o
 
 # Make sure to keep a blank line here after OBJS list
 
