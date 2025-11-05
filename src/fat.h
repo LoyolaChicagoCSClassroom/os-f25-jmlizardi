@@ -79,6 +79,11 @@ struct file {
     struct root_directory_entry rde;
     uint32_t start_cluster;
 };
-
+// FAT file system interface functions
+int fat_init();
+void fat_list_files();
+struct file* fat_open(const char* filename);
+int fat_read(struct file* file, unsigned char* buffer, uint32_t bytes_to_read, uint32_t offset);
+void fat_close(struct file* file);
 
 #endif
