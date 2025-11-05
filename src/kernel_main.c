@@ -3,8 +3,9 @@
 #include "rprintf.h"
 #include "interrupt.h"
 #include "io.h"
-
-
+#include "mmu.h"
+#include "pfa.h"
+#include "page.h"
 #include "fat.h"
 #include "malloc.h"
 
@@ -195,7 +196,7 @@ unsigned char keyboard_map[128] =
     }
     esp_printf((func_ptr)putc, "\n");
     esp_printf((func_ptr)putc, "=== FAT File System Test Complete ===\n\n");
-    
+
     static struct ppage *demo_allocated_pages = NULL;
 
     while (1) {
