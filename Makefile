@@ -24,10 +24,10 @@ SDIR = src
 OBJS := \
 	rprintf.o \
 	terminal.o \
-	page.O \
-	mmu.o \
 	kernel_main.o \
 	interrupt.o \
+	page.O \
+	mmu.o \
 	ide.o \
 	fat.o \
 	malloc.o
