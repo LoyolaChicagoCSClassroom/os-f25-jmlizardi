@@ -4,7 +4,6 @@
 #include "interrupt.h"
 #include "io.h"
 #include "mmu.h"
-#include "pfa.h"
 #include "page.h"
 #include "fat.h"
 #include "malloc.h"
