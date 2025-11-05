@@ -26,7 +26,7 @@ OBJS := \
 	terminal.o \
 	kernel_main.o \
 	interrupt.o \
-	page.O \
+	page.o \
 	mmu.o \
 	ide.o \
 	fat.o \
