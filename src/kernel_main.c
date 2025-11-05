@@ -91,31 +91,6 @@ unsigned char keyboard_map[128] =
      }
      print_execution_level(); // After the print executes, showing it works & scrolls print CPL 
 
-
-    // ===== Assignment 5: Test FAT File System =====
-    esp_printf((func_ptr)putc, "\n=== Testing FAT File System ===\n");
-    
-    // Initialize FAT filesystem
-    if (fat_init() != 0) {
-        esp_printf((func_ptr)putc, "ERROR: Failed to initialize FAT!\n");
-    } else {
-        esp_printf((func_ptr)putc, "FAT initialized successfully!\n");
-        
-        // List files
-        esp_printf((func_ptr)putc, "\nFiles in root directory:\n");
-        fat_list_files();
-        
-        // Try to open a file
-        esp_printf((func_ptr)putc, "\nTrying to open KERNEL file...\n");
-        struct file* f = fat_open("KERNEL");
-        if (f) {
-            esp_printf((func_ptr)putc, "Opened KERNEL, size: %d bytes\n", f->rde.file_size);
-            fat_close(f);
-        } else {
-            esp_printf((func_ptr)putc, "Failed to open KERNEL\n");
-        }
-    }
-
     // Test the page frame allocator
     esp_printf((func_ptr)putc, "\n=== Testing Page Frame Allocator ===\n");
     
@@ -173,30 +148,56 @@ unsigned char keyboard_map[128] =
     esp_printf((func_ptr)putc, "Virtual memory successfully enabled!\n");
     esp_printf((func_ptr)putc, "Identity mapping working for kernel, stack, and VGA.\n\n");
 
-   /*
-    // Test that memory mapping works by allocating and mapping some pages
-    esp_printf((func_ptr)putc, "=== Page allocator test (without MMU functions) ===\n");
-    struct ppage *test_pages = allocate_physical_pages(1);
-    if (test_pages != NULL) {
-        esp_printf((func_ptr)putc, "Allocated test page at physical address: 0x%08x\n", 
-                   (unsigned int)test_pages->physical_addr);
-        free_physical_pages(test_pages);
-        esp_printf((func_ptr)putc, "Test page freed successfully.\n");
-    }
-    esp_printf((func_ptr)putc, "Page allocator working correctly without MMU.\n\n");
-
-    // Interactive keyboard commands for page allocator
-    // Implemented to control page allocation via keyboard for demo purposes
-    esp_printf((func_ptr)putc, "\nPage Allocator Commands:\n");
-    esp_printf((func_ptr)putc, "Press '1' to allocate 1 page\n");
-    esp_printf((func_ptr)putc, "Press '2' to allocate 2 pages\n");
-    esp_printf((func_ptr)putc, "Press 'f' to free all allocated pages\n");
-    esp_printf((func_ptr)putc, "Press 's' to show allocator status\n");
-    esp_printf((func_ptr)putc, "Other keys will show scancode\n\n");
-    */
-    // Track allocated pages for interactive demo
-    static struct ppage *demo_allocated_pages = NULL;
+    // ===== Assignment 5: Test FAT File System =====
+    esp_printf((func_ptr)putc, "\n=== Testing FAT File System ===\n");
     
+    // Initialize FAT filesystem
+    if (fat_init() != 0) {
+        esp_printf((func_ptr)putc, "ERROR: Failed to initialize FAT filesystem!\n");
+        esp_printf((func_ptr)putc, "Boot sector may be invalid or disk not accessible.\n");
+    } else {
+        esp_printf((func_ptr)putc, "FAT filesystem initialized successfully!\n\n");
+        
+        // List files in root directory
+        esp_printf((func_ptr)putc, "Files in root directory:\n");
+        esp_printf((func_ptr)putc, "------------------------\n");
+        fat_list_files();
+        esp_printf((func_ptr)putc, "\n");
+        
+        // Try to open and read the KERNEL file
+        esp_printf((func_ptr)putc, "Attempting to open KERNEL file...\n");
+        struct file* kernel_file = fat_open("KERNEL");
+        if (kernel_file) {
+            esp_printf((func_ptr)putc, "Successfully opened KERNEL file\n");
+            esp_printf((func_ptr)putc, "File size: %d bytes\n", kernel_file->rde.file_size);
+            
+            // Read first 128 bytes as a test
+            unsigned char buffer[128];
+            int bytes_read = fat_read(kernel_file, buffer, 128, 0);
+            esp_printf((func_ptr)putc, "Read %d bytes from file\n", bytes_read);
+            
+            // Display first 16 bytes in hex
+            if (bytes_read > 0) {
+                esp_printf((func_ptr)putc, "First 16 bytes (hex): ");
+                for (int i = 0; i < 16 && i < bytes_read; i++) {
+                    esp_printf((func_ptr)putc, "%02x ", buffer[i]);
+                }
+                esp_printf((func_ptr)putc, "\n");
+            }
+            
+            fat_close(kernel_file);
+        } else {
+            esp_printf((func_ptr)putc, "Failed to open KERNEL file\n");
+        }
+        
+        esp_printf((func_ptr)putc, "\nHeap usage: %d bytes used, %d bytes free\n", 
+                   get_heap_used(), get_heap_free());
+    }
+    esp_printf((func_ptr)putc, "\n");
+    esp_printf((func_ptr)putc, "=== FAT File System Test Complete ===\n\n");
+    
+    static struct ppage *demo_allocated_pages = NULL;
+
     while (1) {
         // Check if keyboard has data
         unsigned char status = inb(0x64);
