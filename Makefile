@@ -24,6 +24,8 @@ SDIR = src
 OBJS := \
 	rprintf.o \
 	terminal.o \
+	page.O \
+	mmu.o \
 	kernel_main.o \
 	interrupt.o \
 	ide.o \
