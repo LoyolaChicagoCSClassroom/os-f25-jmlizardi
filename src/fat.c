@@ -162,7 +162,7 @@ int fat_read(struct file* file, void* buffer, uint32_t bytes_to_read, uint32_t o
         // Copy data from cluster to buffer
         uint32_t bytes_to_copy = cluster_size - offset;
         if (bytes_to_copy > bytes_to_read) {
-            bytes_to_copy = size;
+            bytes_to_copy = bytes_to_read;
         }
         
         for (uint32_t i = 0; i < bytes_to_copy; i++) {
