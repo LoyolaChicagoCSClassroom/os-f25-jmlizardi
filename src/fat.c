@@ -10,12 +10,13 @@
 static struct boot_sector boot_sec;
 static struct file *open_files = NULL;
 
-
+/*
 void free(void* ptr) {
     // Simple implementation - no actual freeing
     // In a real implementation, you'd track allocated blocks
     (void)ptr;
 }
+*/
 
 // Helper function to calculate cluster to LBA conversion
 static uint32_t cluster_to_lba(uint32_t cluster) {
