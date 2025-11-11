@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include "malloc.h"
 
-#define FAT_BOOT_SECTOR 0
+#define FAT_BOOT_SECTOR 2048  // Partition starts at sector 2048 (1MB offset)
 
 static struct boot_sector boot_sec;
 static struct file *open_files = NULL;
@@ -20,7 +20,7 @@ void free(void* ptr) {
 
 // Helper function to calculate cluster to LBA conversion
 static uint32_t cluster_to_lba(uint32_t cluster) {
-    return boot_sec.num_reserved_sectors + 
+    return FAT_BOOT_SECTOR + boot_sec.num_reserved_sectors + 
            (boot_sec.num_fat_tables * boot_sec.num_sectors_per_fat) +
            ((boot_sec.num_root_dir_entries * 32) / SECTOR_SIZE) +
            ((cluster - 2) * boot_sec.num_sectors_per_cluster);
@@ -44,7 +44,7 @@ int fat_init(void) {
 // Read FAT table entry
 static uint16_t read_fat_entry(uint16_t cluster) {
     uint32_t fat_offset = cluster * 2; // FAT16 uses 2 bytes per entry
-    uint32_t fat_sector = boot_sec.num_reserved_sectors + (fat_offset / SECTOR_SIZE);
+    uint32_t fat_sector = FAT_BOOT_SECTOR + boot_sec.num_reserved_sectors + (fat_offset / SECTOR_SIZE);
     uint32_t entry_offset = fat_offset % SECTOR_SIZE;
     
     unsigned char sector_buffer[SECTOR_SIZE];
@@ -61,7 +61,7 @@ struct root_directory_entry* find_file(const char* filename) {
     unsigned char sector_buffer[SECTOR_SIZE];
     
     uint32_t root_dir_sectors = (boot_sec.num_root_dir_entries * 32) / SECTOR_SIZE;
-    uint32_t root_dir_start = boot_sec.num_reserved_sectors + 
+    uint32_t root_dir_start = FAT_BOOT_SECTOR + boot_sec.num_reserved_sectors + 
                               (boot_sec.num_fat_tables * boot_sec.num_sectors_per_fat);
     
     for (uint32_t sector = 0; sector < root_dir_sectors; sector++) {
@@ -200,7 +200,7 @@ void fat_list_files(void) {
     int file_count = 0;
     
     uint32_t root_dir_sectors = (boot_sec.num_root_dir_entries * 32) / SECTOR_SIZE;
-    uint32_t root_dir_start = boot_sec.num_reserved_sectors + 
+    uint32_t root_dir_start = FAT_BOOT_SECTOR + boot_sec.num_reserved_sectors + 
                               (boot_sec.num_fat_tables * boot_sec.num_sectors_per_fat);
     
     esp_printf((func_ptr)putc, "DEBUG: Root dir starts at LBA %d, reading %d sectors\n", 
