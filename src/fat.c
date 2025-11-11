@@ -191,7 +191,9 @@ void fat_close(struct file* file) {
     } else {
         open_files = file->next;
     }
-    
+
+}
+
 // List files in root directory
 void fat_list_files(void) {
     unsigned char sector_buffer[SECTOR_SIZE];
