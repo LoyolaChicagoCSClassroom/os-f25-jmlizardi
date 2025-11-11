@@ -127,14 +127,14 @@ struct file* fat_open(const char* filename) {
 }
 
 // Read data from file
-int fat_read(struct file* file, void* buffer, uint32_t size, uint32_t offset) {
+int fat_read(struct file* file, void* buffer, uint32_t bytes_to_read, uint32_t offset) {
     if (!file || offset >= file->rde.file_size) {
         return 0;
     }
     
     // Adjust size if reading beyond end of file
-    if (offset + size > file->rde.file_size) {
-        size = file->rde.file_size - offset;
+    if (offset + bytes_to_read > file->rde.file_size) {
+        bytes_to_read = file->rde.file_size - offset;
     }
     
     uint32_t cluster = file->start_cluster;
@@ -152,7 +152,7 @@ int fat_read(struct file* file, void* buffer, uint32_t size, uint32_t offset) {
     
     unsigned char cluster_buffer[CLUSTER_SIZE];
     
-    while (size > 0 && cluster < 0xFFF8) {
+    while (bytes_to_read > 0 && cluster < 0xFFF8) {
         // Read entire cluster
         uint32_t cluster_lba = cluster_to_lba(cluster);
         if (ata_lba_read(cluster_lba, cluster_buffer, boot_sec.num_sectors_per_cluster) != 0) {
@@ -161,7 +161,7 @@ int fat_read(struct file* file, void* buffer, uint32_t size, uint32_t offset) {
         
         // Copy data from cluster to buffer
         uint32_t bytes_to_copy = cluster_size - offset;
-        if (bytes_to_copy > size) {
+        if (bytes_to_copy > bytes_to_read) {
             bytes_to_copy = size;
         }
         
@@ -170,7 +170,7 @@ int fat_read(struct file* file, void* buffer, uint32_t size, uint32_t offset) {
         }
         
         bytes_read += bytes_to_copy;
-        size -= bytes_to_copy;
+        bytes_to_read -= bytes_to_copy;
         offset = 0; // After first cluster, offset is always 0
         
         // Move to next cluster
