@@ -192,23 +192,21 @@ void fat_close(struct file* file) {
         open_files = file->next;
     }
     
-    if (file->next) {
-        file->next->prev = file->prev;
-    }
-    
-    free(file);
-}
-
 // List files in root directory
 void fat_list_files(void) {
     unsigned char sector_buffer[SECTOR_SIZE];
+    int file_count = 0;
     
     uint32_t root_dir_sectors = (boot_sec.num_root_dir_entries * 32) / SECTOR_SIZE;
     uint32_t root_dir_start = boot_sec.num_reserved_sectors + 
                               (boot_sec.num_fat_tables * boot_sec.num_sectors_per_fat);
     
+    esp_printf((func_ptr)putc, "DEBUG: Root dir starts at LBA %d, reading %d sectors\n", 
+               root_dir_start, root_dir_sectors);
+    
     for (uint32_t sector = 0; sector < root_dir_sectors; sector++) {
         if (ata_lba_read(root_dir_start + sector, sector_buffer, 1) != 0) {
+            esp_printf((func_ptr)putc, "ERROR: Failed to read sector %d\n", sector);
             continue;
         }
         
@@ -216,9 +214,12 @@ void fat_list_files(void) {
             struct root_directory_entry* dir_entry = 
                 (struct root_directory_entry*)&sector_buffer[i];
             
-            // Check if entry is empty
+            // Check if entry is empty (end of directory)
             if (dir_entry->file_name[0] == 0) {
-                return; // End of directory
+                if (file_count == 0) {
+                    esp_printf((func_ptr)putc, "No files found - directory is empty\n");
+                }
+                return;
             }
             
             // Skip deleted files
@@ -226,10 +227,20 @@ void fat_list_files(void) {
                 continue;
             }
             
-            // Skip volume label and subdirectories for now
+            // Debug output for ALL entries
+            esp_printf((func_ptr)putc, "Entry: [");
+            for (int j = 0; j < 8; j++) {
+                esp_printf((func_ptr)putc, "%c", dir_entry->file_name[j]);
+            }
+            esp_printf((func_ptr)putc, "] attr=0x%02x cluster=%d size=%d\n", 
+                       dir_entry->attribute, dir_entry->cluster, dir_entry->file_size);
+            
+            // Skip volume label and subdirectories
             if (dir_entry->attribute & 0x08 || dir_entry->attribute & 0x10) {
                 continue;
             }
+            
+            file_count++;
             
             // Print filename
             for (int j = 0; j < 8 && dir_entry->file_name[j] != ' '; j++) {
