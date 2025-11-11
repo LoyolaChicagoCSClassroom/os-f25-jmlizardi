@@ -83,7 +83,7 @@ struct file {
 int fat_init();
 void fat_list_files();
 struct file* fat_open(const char* filename);
-int fat_read(struct file* file, unsigned char* buffer, uint32_t bytes_to_read, uint32_t offset);
+int fat_read(struct file* file, void* buffer, uint32_t bytes_to_read, uint32_t offset);
 void fat_close(struct file* file);
 
 #endif
