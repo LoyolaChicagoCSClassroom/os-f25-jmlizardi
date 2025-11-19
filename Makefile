@@ -26,7 +26,11 @@ OBJS := \
 	terminal.o \
 	kernel_main.o \
 	interrupt.o \
-	page.o
+	page.o \
+	mmu.o \
+	ide.o \
+	fat.o \
+	malloc.o
 
 # Make sure to keep a blank line here after OBJS list
 
@@ -36,8 +40,7 @@ $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -g -o $@ $^
 
 $(ODIR)/%.o: $(SDIR)/%.s
-	$(CC) $(CFLAGS) -c -g -o $@ $^
-
+	nasm -f elf32 -g -o $@ $^
 
 all: bin rootfs.img
 
@@ -61,6 +64,10 @@ rootfs.img:
 
 debug:
 	./launch_qemu.sh
+
+debug-monitor:
+	screen -S qemu -d -m qemu-system-i386 -S -s -hda rootfs.img -monitor stdio
+	TERM=xterm i386-unknown-elf-gdb -x gdb_os.txt && killall qemu-system-i386
 
 clean:
 	rm -f grub.img kernel rootfs.img obj/*

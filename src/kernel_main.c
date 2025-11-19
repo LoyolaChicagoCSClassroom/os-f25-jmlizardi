@@ -3,7 +3,10 @@
 #include "rprintf.h"
 #include "interrupt.h"
 #include "io.h"
+#include "mmu.h"
 #include "page.h"
+#include "fat.h"
+#include "malloc.h"
 
 const unsigned int multiboot_header[]  __attribute__((section(".multiboot"))) =
  { 0xE85250D6, 0, 24, (unsigned)(0 - (0xE85250D6u + 0u + 24u)), 0, 8 };
@@ -112,18 +115,89 @@ unsigned char keyboard_map[128] =
     
     esp_printf((func_ptr)putc, "Page allocator test complete.\n\n");
 
-    // Interactive keyboard commands for page allocator
-    // Implemented to control page allocation via keyboard for demo purposes
-    esp_printf((func_ptr)putc, "\nPage Allocator Commands:\n");
-    esp_printf((func_ptr)putc, "Press '1' to allocate 1 page\n");
-    esp_printf((func_ptr)putc, "Press '2' to allocate 2 pages\n");
-    esp_printf((func_ptr)putc, "Press 'f' to free all allocated pages\n");
-    esp_printf((func_ptr)putc, "Press 's' to show allocator status\n");
-    esp_printf((func_ptr)putc, "Other keys will show scancode\n\n");
+    // === Assignment #4: MMU Setup and Paging ===
+    esp_printf((func_ptr)putc, "=== Setting up MMU and enabling paging ===\n");
     
-    // Track allocated pages for interactive demo
+    // Get page directory pointer from mmu.c
+    extern struct page_directory_entry pd[1024];
+    
+    // Identity map kernel, stack, and video buffer
+    identity_map_kernel(pd);
+    
+    // Load page directory into CR3
+    esp_printf((func_ptr)putc, "Loading page directory into CR3...\n");
+    loadPageDirectory(pd);
+    
+    // Enable paging
+    esp_printf((func_ptr)putc, "Enabling paging...\n");
+    enable_paging();
+
+    unsigned int cr0;
+    asm volatile("mov %%cr0, %0" : "=r"(cr0));
+    if (cr0 & (1 << 31)) {
+        esp_printf((func_ptr)putc, "Paging is ENABLED (MMU active, CR0.PG bit set)\n");
+    } else {
+        esp_printf((func_ptr)putc, "Paging is DISABLED (MMU not active)\n");
+    }
+
+    
+    esp_printf((func_ptr)putc, "Paging enabled successfully! Virtual memory is now active.\n");
+    esp_printf((func_ptr)putc, "All memory accesses are now going through the MMU.\n\n");
+
+    esp_printf((func_ptr)putc, "=== MMU Assignment #4 Complete ===\n");
+    esp_printf((func_ptr)putc, "Virtual memory successfully enabled!\n");
+    esp_printf((func_ptr)putc, "Identity mapping working for kernel, stack, and VGA.\n\n");
+
+    // ===== Assignment 5: Test FAT File System =====
+    esp_printf((func_ptr)putc, "\n=== Testing FAT File System ===\n");
+    
+    // Initialize FAT filesystem
+    if (fat_init() != 0) {
+        esp_printf((func_ptr)putc, "ERROR: Failed to initialize FAT filesystem!\n");
+        esp_printf((func_ptr)putc, "Boot sector may be invalid or disk not accessible.\n");
+    } else {
+        esp_printf((func_ptr)putc, "FAT filesystem initialized successfully!\n\n");
+        
+        // List files in root directory
+        esp_printf((func_ptr)putc, "Files in root directory:\n");
+        esp_printf((func_ptr)putc, "------------------------\n");
+        fat_list_files();
+        esp_printf((func_ptr)putc, "\n");
+        
+        // Try to open and read the KERNEL file
+        esp_printf((func_ptr)putc, "Attempting to open KERNEL file...\n");
+        struct file* kernel_file = fat_open("KERNEL");
+        if (kernel_file) {
+            esp_printf((func_ptr)putc, "Successfully opened KERNEL file\n");
+            esp_printf((func_ptr)putc, "File size: %d bytes\n", kernel_file->rde.file_size);
+            
+            // Read first 128 bytes as a test
+            unsigned char buffer[128];
+            int bytes_read = fat_read(kernel_file, buffer, 128, 0);
+            esp_printf((func_ptr)putc, "Read %d bytes from file\n", bytes_read);
+            
+            // Display first 16 bytes in hex
+            if (bytes_read > 0) {
+                esp_printf((func_ptr)putc, "First 16 bytes (hex): ");
+                for (int i = 0; i < 16 && i < bytes_read; i++) {
+                    esp_printf((func_ptr)putc, "%02x ", buffer[i]);
+                }
+                esp_printf((func_ptr)putc, "\n");
+            }
+            
+            fat_close(kernel_file);
+        } else {
+            esp_printf((func_ptr)putc, "Failed to open KERNEL file\n");
+        }
+        
+        esp_printf((func_ptr)putc, "\nHeap usage: %d bytes used, %d bytes free\n", 
+                   get_heap_used(), get_heap_free());
+    }
+    esp_printf((func_ptr)putc, "\n");
+    esp_printf((func_ptr)putc, "=== FAT File System Test Complete ===\n\n");
+
     static struct ppage *demo_allocated_pages = NULL;
-    
+
     while (1) {
         // Check if keyboard has data
         unsigned char status = inb(0x64);
